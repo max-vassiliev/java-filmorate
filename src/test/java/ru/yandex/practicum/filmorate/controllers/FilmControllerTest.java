@@ -5,14 +5,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import javax.validation.*;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import javax.validation.ValidationException;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.apache.commons.lang.RandomStringUtils;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 class FilmControllerTest {
 
@@ -112,18 +120,11 @@ class FilmControllerTest {
     // FAIL: описание фильма превышает 200 символов
     @Test
     void shouldFailToAddFilmIfDescriptionExceeds200Words() {
-        final Film film = createFilm();
         String errorMessageExpected = "Описание не может превышать 200 символов";
         String errorMessageActual = null;
 
-        film.setDescription("Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie" +         // 100 символов
-                            "Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie" + "М");   // 201 символ
+        final Film film = createFilm();
+        film.setDescription(RandomStringUtils.randomAlphabetic(201));
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         if (violations.iterator().hasNext())
@@ -137,15 +138,7 @@ class FilmControllerTest {
     @Test
     void shouldAddFilmWithMaxDescriptionSize() {
         final Film film = createFilm();
-
-        film.setDescription("Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie" +   // 100 символов
-                            "Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie" +
-                            "Moviemoviemoviemoviemovie");   // 200 символов
+        film.setDescription(RandomStringUtils.randomAlphabetic(200));
 
         final Film savedFilm = filmController.add(film);
         Set<ConstraintViolation<Film>> violations = validator.validate(film);

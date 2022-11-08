@@ -2,7 +2,13 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import ru.yandex.practicum.filmorate.model.User;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
+
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.Valid;
@@ -35,10 +41,10 @@ public class UserController {
             log.info("Запрос к эндпойнту POST /users - " +
                     "Добавлен пользователь: " + user);
             return user;
-        } catch (ValidationException e) {
+        } catch (ValidationException exception) {
             log.warn("Ошибка при обращении к эндпойнту POST /users: " +
-                    "{}", e.getMessage(), e);
-            throw e;
+                    "{}", exception.getMessage(), exception);
+            throw exception;
         }
     }
 
@@ -50,13 +56,13 @@ public class UserController {
             checkName(user);
             checkIdOnUpdate(user);
             users.put(user.getId(), user);
-            log.info("Запрос к эндпойнту PUT /users" +
-                    "Добавлен данные о пользователе: " + user);
+            log.info("Запрос к эндпойнту PUT /users - " +
+                    "Добавлены данные о пользователе: {}", user);
             return user;
-        } catch (ValidationException e) {
-            log.warn("Ошибка при обращении к эндпойнту PUT /users: " +
-                    "{}", e.getMessage(), e);
-            throw e;
+        } catch (ValidationException exception) {
+            log.warn("Ошибка при обращении к эндпойнту PUT /users - " +
+                    "{}", exception.getMessage(), exception);
+            throw exception;
         }
     }
 

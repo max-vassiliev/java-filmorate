@@ -1,6 +1,12 @@
 package ru.yandex.practicum.filmorate.controllers;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
+
 import ru.yandex.practicum.filmorate.model.Film;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,12 +41,12 @@ public class FilmController {
             film.setId(nextId++);
             films.put(film.getId(), film);
             log.info("Запрос к эндпойнту POST /films - " +
-                    "Сохранен фильм: " + film);
+                    "Сохранен фильм: {}", film);
             return film;
-        } catch (ValidationException e) {
-            log.warn("Ошибка валидации при обращении к эндпойнту POST /films: " +
-                    "{}", e.getMessage(), e);
-            throw e;
+        } catch (ValidationException exception) {
+            log.warn("Ошибка валидации при обращении к эндпойнту POST /films - " +
+                    "{}", exception.getMessage(), exception);
+            throw exception;
         }
     }
 
@@ -53,10 +59,10 @@ public class FilmController {
              log.info("Запрос к эндпойнту PUT /films" +
                      " Сохранен фильм: " + film);
              return film;
-         } catch (ValidationException e) {
+         } catch (ValidationException exception) {
              log.warn("Ошибка при обращении к эндпойнту PUT /films: " +
-                     "{}", e.getMessage(), e);
-             throw e;
+                     "{}", exception.getMessage(), exception);
+             throw exception;
          }
     }
 
