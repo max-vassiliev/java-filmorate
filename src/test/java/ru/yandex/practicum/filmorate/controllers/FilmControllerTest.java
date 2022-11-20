@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.controllers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.ConstraintViolation;
@@ -17,6 +18,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.RandomStringUtils;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.ValidationService;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,7 +40,10 @@ class FilmControllerTest {
 
     @BeforeEach
     void createFilmController() {
-        filmController = new FilmController();
+        filmController = new FilmController(
+                new FilmService(new InMemoryFilmStorage(), new InMemoryUserStorage()),
+                new ValidationService()
+        );
     }
 
     // шаблон фильма со всеми полями
@@ -266,7 +274,6 @@ class FilmControllerTest {
     // FAIL: пустой запрос при обновлении
     @Test
     void shouldFailToUpdateWhenEmptyRequest() {
-        String expectedExceptionMessage = "При обновлении передан пустой запрос";
         String expectedErrorMessage = "Укажите название фильма";
         String actualErrorMessage = null;
 
@@ -279,7 +286,7 @@ class FilmControllerTest {
                 ValidationException.class,
                 () -> filmController.update(filmToUpdate)
         );
-        assertEquals(expectedExceptionMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");
+        assertEquals(expectedErrorMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");
 
         Set<ConstraintViolation<Film>> violations = validator.validate(filmToUpdate);
         if (violations.iterator().hasNext())
@@ -341,20 +348,21 @@ class FilmControllerTest {
     // FAIL: при обновлении передается несуществующий ID
     @Test
     void shouldFailToUpdateWhenUsingUnknownID() {
-        String expectedExceptionMessage = "В таблице нет фильма с таким ID";
+        int testId = 1000;
+        String expectedExceptionMessage = "Не найден фильм с id " + testId;
         final Film filmToAdd = createFilm();
 
         filmController.add(filmToAdd);
 
         final Film filmToUpdate = new Film();
-        filmToUpdate.setId(1000);
+        filmToUpdate.setId(testId);
         filmToUpdate.setName("Motion Picture");
         filmToUpdate.setDescription("Motion Picture description");
         filmToUpdate.setReleaseDate(LocalDate.of(2010, Month.DECEMBER, 25));
         filmToUpdate.setDuration(120);
 
-        final ValidationException exception = assertThrows(
-                ValidationException.class,
+        final FilmNotFoundException exception = assertThrows(
+                FilmNotFoundException.class,
                 () -> filmController.update(filmToUpdate)
         );
         assertEquals(expectedExceptionMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");

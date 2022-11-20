@@ -3,7 +3,11 @@ package ru.yandex.practicum.filmorate.controllers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.service.ValidationService;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -33,7 +37,10 @@ class UserControllerTest {
 
     @BeforeEach
     void createUserController() {
-        userController = new UserController();
+        userController = new UserController(
+                new UserService(new InMemoryUserStorage()),
+                new ValidationService()
+        );
     }
 
     // шаблон: получить пользователя со всеми данными
@@ -273,7 +280,7 @@ class UserControllerTest {
     // FAIL: пустой запрос при обновлении данных пользователя
     @Test
     void shouldFailToUpdateUserWhenEmptyRequest() {
-        String expectedExceptionMessage = "Необходимо указать ID, адрес электронной почты и логин пользователя";
+        String expectedExceptionMessage = "Необходимо указать адрес электронной почты и логин";
         String loginExpectedError = "Необходимо указать логин";
         String emailExpectedError = "Необходимо указать адрес электронной почты";
         String loginActualError = null;
@@ -340,20 +347,21 @@ class UserControllerTest {
     // FAIL: при обновлении передается несуществующий ID
     @Test
     void shouldFailToUpdateWhenUsingUnknownID() {
-        String expectedExceptionMessage = "Нет пользователя с таким ID";
+        int testId = 1000;
+        String expectedExceptionMessage = "Не найден пользователь с id " + testId;
         final User userToAdd = createUser();
 
         userController.add(userToAdd);
 
         final User userToUpdate = new User();
-        userToUpdate.setId(1000);
+        userToUpdate.setId(testId);
         userToUpdate.setEmail("pxl2000@example.com");
         userToUpdate.setLogin("2000pxl");
         userToUpdate.setName("PiXl");
         userToUpdate.setBirthday(LocalDate.now());
 
-        final ValidationException exception = assertThrows(
-                ValidationException.class,
+        final UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
                 () -> userController.update(userToUpdate)
         );
         assertEquals(expectedExceptionMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");
