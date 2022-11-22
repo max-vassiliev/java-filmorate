@@ -282,12 +282,6 @@ class FilmControllerTest {
 
         filmController.add(filmToAdd);
 
-        final ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> filmController.update(filmToUpdate)
-        );
-        assertEquals(expectedErrorMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");
-
         Set<ConstraintViolation<Film>> violations = validator.validate(filmToUpdate);
         if (violations.iterator().hasNext())
             actualErrorMessage = violations.iterator().next().getMessage();
@@ -300,7 +294,6 @@ class FilmControllerTest {
     // FAIL: при обновлении передается верный ID, но не заполнены остальные поля
     @Test
     void shouldFailToUpdateWhenCorrectIdButEmptyRequest() {
-        String expectedExceptionMessage = "Укажите название фильма";
         String expectedErrorMessage = "Укажите название фильма";
         String actualErrorMessage = null;
 
@@ -309,12 +302,6 @@ class FilmControllerTest {
 
         final Film filmToUpdate = new Film();
         filmToUpdate.setId(addedFilm.getId());
-
-        final ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> filmController.update(filmToUpdate)
-        );
-        assertEquals(expectedExceptionMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");
 
         Set<ConstraintViolation<Film>> violations = validator.validate(filmToUpdate);
         if (violations.iterator().hasNext())

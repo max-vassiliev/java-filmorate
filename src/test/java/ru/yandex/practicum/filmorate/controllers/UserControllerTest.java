@@ -79,19 +79,12 @@ class UserControllerTest {
     // FAIL: добавить пользователя без данных
     @Test
     void shouldFailToAddUserIfAllFieldsAreEmpty() {
-        String expectedExceptionMessage = "Необходимо указать адрес электронной почты и логин";
         String emailExpectedError = "Необходимо указать адрес электронной почты";
         String loginExpectedError = "Необходимо указать логин";
         String emailActualError = null;
         String loginActualError = null;
 
         final User user = new User();
-
-        final ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userController.add(user)
-        );
-        assertEquals(expectedExceptionMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         for (ConstraintViolation<User> violation : violations) {
@@ -149,12 +142,6 @@ class UserControllerTest {
         final User user = createUser();
         user.setLogin(null);
 
-        final ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userController.add(user)
-        );
-        assertEquals(expectedErrorMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");
-
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         if (violations.iterator().hasNext())
             actualErrorMessage = violations.iterator().next().getMessage();
@@ -185,12 +172,6 @@ class UserControllerTest {
 
         final User user = createUser();
         user.setEmail(null);
-
-        final ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userController.add(user)
-        );
-        assertEquals(expectedErrorMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         if (violations.iterator().hasNext())
@@ -280,7 +261,6 @@ class UserControllerTest {
     // FAIL: пустой запрос при обновлении данных пользователя
     @Test
     void shouldFailToUpdateUserWhenEmptyRequest() {
-        String expectedExceptionMessage = "Необходимо указать адрес электронной почты и логин";
         String loginExpectedError = "Необходимо указать логин";
         String emailExpectedError = "Необходимо указать адрес электронной почты";
         String loginActualError = null;
@@ -290,12 +270,6 @@ class UserControllerTest {
         final User userToUpdate = new User();
 
         userController.add(userToAdd);
-
-        final ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userController.update(userToUpdate)
-        );
-        assertEquals(expectedExceptionMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");
 
         Set<ConstraintViolation<User>> violations = validator.validate(userToUpdate);
         for (ConstraintViolation<User> violation : violations) {
@@ -313,7 +287,6 @@ class UserControllerTest {
     // FAIL: при обновлении передается верный ID, но не заполнены остальные необходимые поля
     @Test
     void shouldFailToUpdateWhenCorrectIdButEmptyRequest() {
-        String expectedExceptionMessage = "Необходимо указать адрес электронной почты и логин";
         String loginExpectedError = "Необходимо указать логин";
         String emailExpectedError = "Необходимо указать адрес электронной почты";
         String loginActualError = null;
@@ -324,12 +297,6 @@ class UserControllerTest {
 
         final User userToUpdate = new User();
         userToUpdate.setId(addedUser.getId());
-
-        final ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> userController.update(userToUpdate)
-        );
-        assertEquals(expectedExceptionMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");
 
         Set<ConstraintViolation<User>> violations = validator.validate(userToUpdate);
         for (ConstraintViolation<User> violation : violations) {

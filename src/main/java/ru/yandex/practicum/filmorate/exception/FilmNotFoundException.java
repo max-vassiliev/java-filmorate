@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.exception;
 
-public class FilmNotFoundException extends RuntimeException {
+import lombok.NoArgsConstructor;
 
-    public FilmNotFoundException() {
-    }
+@NoArgsConstructor
+public class FilmNotFoundException extends RuntimeException {
 
     public FilmNotFoundException(String message) {
         super(message);

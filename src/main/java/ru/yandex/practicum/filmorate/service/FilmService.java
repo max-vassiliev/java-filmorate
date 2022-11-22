@@ -102,7 +102,7 @@ public class FilmService {
     }
 
     // сравнить фильмы по количеству лайков
-    private int compareLikes(Film film1, Film film2) {
-        return -1 * Integer.compare(film1.getLikes().size(), film2.getLikes().size());
+    private int compareLikes(Film film, Film filmToCompare) {
+        return -1 * Integer.compare(film.getLikes().size(), filmToCompare.getLikes().size());
     }
 }

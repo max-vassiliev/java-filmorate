@@ -15,15 +15,6 @@ public class ValidationService {
 
     // валидация пользователя
     public void validate(User user) throws ValidationException {
-        if (user.getEmail() == null && user.getLogin() == null) {
-            throw new ValidationException("Необходимо указать адрес электронной почты и логин");
-        }
-        if (user.getEmail() == null) {
-            throw new ValidationException("Необходимо указать адрес электронной почты");
-        }
-        if (user.getLogin() == null) {
-            throw new ValidationException("Необходимо указать логин");
-        }
         if (user.getLogin().contains(" ")) {
             throw new ValidationException("В логине нельзя использовать пробелы");
         }
@@ -34,10 +25,6 @@ public class ValidationService {
 
     // валидация фильма
     public void validate(Film film) {
-        if (film.getName() == null) {
-            throw new ValidationException("Укажите название фильма");
-        }
-
         if (film.getReleaseDate() == null) return;
         if (CINEMA_CREATED.isAfter(film.getReleaseDate())) {
             throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
