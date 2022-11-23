@@ -1,107 +1,87 @@
 package ru.yandex.practicum.filmorate.controllers;
 
-import ru.yandex.practicum.filmorate.model.User;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PutMapping;
+import ru.yandex.practicum.filmorate.model.User;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.service.ValidationService;
 
 import javax.validation.Valid;
-import javax.validation.ValidationException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
 @Slf4j
 public class UserController {
 
-    private int nextId = 1;
-    private final Map<Integer, User> users = new HashMap<>();
+    private final UserService userService;
+    private final ValidationService validationService;
+
+    @Autowired
+    public UserController(UserService userService, ValidationService validationService) {
+        this.userService = userService;
+        this.validationService = validationService;
+    }
+
+    @GetMapping("/{id}")
+    public User get(@PathVariable int id) {
+        log.info("Get User{}", id);
+        return userService.get(id);
+    }
 
     @GetMapping
     public List<User> getAll() {
-        return new ArrayList<>(users.values());
+        log.info("Get all users");
+        return userService.getAll();
     }
 
     @PostMapping
     public User add(@Valid @RequestBody User user) {
-        try {
-            checkRequiredData(user);
-            checkName(user);
-            user.setId(nextId++);
-            users.put(user.getId(), user);
-            log.info("Запрос к эндпойнту POST /users - " +
-                    "Добавлен пользователь: " + user);
-            return user;
-        } catch (ValidationException exception) {
-            log.warn("Ошибка при обращении к эндпойнту POST /users: " +
-                    "{}", exception.getMessage(), exception);
-            throw exception;
-        }
+        log.info("Add user: {}", user);
+        validationService.validate(user);
+        return userService.add(user);
     }
 
     @PutMapping
-    public User update(@Valid @RequestBody User user) throws ValidationException {
-        try {
-            checkBeforeUpdate(user);
-            checkRequiredData(user);
-            checkName(user);
-            checkIdOnUpdate(user);
-            users.put(user.getId(), user);
-            log.info("Запрос к эндпойнту PUT /users - " +
-                    "Добавлены данные о пользователе: {}", user);
-            return user;
-        } catch (ValidationException exception) {
-            log.warn("Ошибка при обращении к эндпойнту PUT /users - " +
-                    "{}", exception.getMessage(), exception);
-            throw exception;
-        }
+    public User update(@Valid @RequestBody User user) {
+        log.info("Update user: {}", user);
+        validationService.validate(user);
+        return userService.update(user);
     }
 
-    private void checkRequiredData(User user) throws ValidationException {
-        if (user.getEmail() == null && user.getLogin() == null) {
-            throw new ValidationException("Необходимо указать адрес электронной почты и логин");
-        }
-        if (user.getEmail() == null) {
-            throw new ValidationException("Необходимо указать адрес электронной почты");
-        }
-        if (user.getLogin() == null) {
-            throw new ValidationException("Необходимо указать логин");
-        }
-        if (user.getLogin().contains(" ")) {
-            throw new ValidationException("В логине нельзя использовать пробелы");
-        }
+    @PutMapping("/{id}/friends/{friendId}")
+    public User addFriend(@PathVariable int id,
+                          @PathVariable int friendId) {
+        log.info("Befriend User{} and User{}", id, friendId);
+        return userService.addFriend(id, friendId);
     }
 
-    // если имя не указано, записать логин в поле name
-    private void checkName(User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public User removeFriend(@PathVariable int id,
+                             @PathVariable int friendId) {
+        log.info("Unfriend User{} and User{}", id, friendId);
+        return userService.removeFriend(id, friendId);
     }
 
-    // проверить необходимые данные для обновления
-    private void checkBeforeUpdate(User user) throws ValidationException {
-        if (user.getId() == 0 && user.getEmail() == null && user.getLogin() == null) {
-            throw new ValidationException("Необходимо указать ID, адрес электронной почты и логин пользователя");
-        }
+    @GetMapping("/{id}/friends")
+    public List<User> getFriends(@PathVariable int id) {
+        log.info("Get friends of User{}", id);
+        return userService.getFriends(id);
     }
 
-    private void checkIdOnUpdate(User user) throws ValidationException {
-        if (user.getId() == 0) {
-            user.setId(nextId++);
-            return;
-        }
-        if (!users.containsKey(user.getId())) {
-            throw new ValidationException("Нет пользователя с таким ID");
-        }
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> getCommonFriends(@PathVariable int id,
+                                       @PathVariable int otherId) {
+        log.info("Get common friends of User{} and User{}", id, otherId);
+        return userService.getCommonFriends(id, otherId);
     }
 }
