@@ -8,7 +8,7 @@
 Приложение хранит данные о фильмах (`film`) и пользователях (`user`), а также взаимосвязи между ними: с кем пользователь дружит (`friends`) и какие фильмы ему нравятся (`film_likes`). Для фильмов предусмотрена возможность присваивать несколько жанров (`genre`).
 
 ![ER Diagram](/java-filmorate-erd.png)
-[ER-диаграмма базы данных Filmorate](https://app.quickdatabasediagrams.com/#/d/KepfNg) 
+[ER-диаграмма базы данных приложения Filmorate](https://app.quickdatabasediagrams.com/#/d/KepfNg) 
 
 ### Примеры SQL-запросов
 
