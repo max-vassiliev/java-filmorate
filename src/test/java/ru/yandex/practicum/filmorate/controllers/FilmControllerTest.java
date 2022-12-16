@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.controllers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -14,14 +15,17 @@ import javax.validation.ValidationException;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.RandomStringUtils;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.ValidationService;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.impl.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.impl.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.impl.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.impl.MpaDbStorage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -41,8 +45,10 @@ class FilmControllerTest {
     @BeforeEach
     void createFilmController() {
         filmController = new FilmController(
-                new FilmService(new InMemoryFilmStorage(), new InMemoryUserStorage()),
-                new ValidationService()
+                new FilmService(new InMemoryFilmStorage(),
+                        new InMemoryUserStorage()),
+                new ValidationService(new MpaDbStorage(new JdbcTemplate()),
+                        new GenreDbStorage(new JdbcTemplate()))
         );
     }
 

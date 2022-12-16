@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,17 +20,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
 @Slf4j
 public class UserController {
 
     private final UserService userService;
     private final ValidationService validationService;
-
-    @Autowired
-    public UserController(UserService userService, ValidationService validationService) {
-        this.userService = userService;
-        this.validationService = validationService;
-    }
 
     @GetMapping("/{id}")
     public User get(@PathVariable int id) {
@@ -52,6 +47,11 @@ public class UserController {
     }
 
     @PutMapping
+    public User updateWithOutId(@Valid @RequestBody User user) {
+        return update(user);
+    }
+
+    @PutMapping("/{id}")
     public User update(@Valid @RequestBody User user) {
         log.info("Update user: {}", user);
         validationService.validate(user);
@@ -83,5 +83,6 @@ public class UserController {
                                        @PathVariable int otherId) {
         log.info("Get common friends of User{} and User{}", id, otherId);
         return userService.getCommonFriends(id, otherId);
+
     }
 }

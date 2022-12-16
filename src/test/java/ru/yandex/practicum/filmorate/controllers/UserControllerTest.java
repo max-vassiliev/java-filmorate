@@ -3,11 +3,15 @@ package ru.yandex.practicum.filmorate.controllers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.service.ValidationService;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.impl.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.impl.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.impl.MpaDbStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -39,7 +43,8 @@ class UserControllerTest {
     void createUserController() {
         userController = new UserController(
                 new UserService(new InMemoryUserStorage()),
-                new ValidationService()
+                new ValidationService(new MpaDbStorage(new JdbcTemplate()),
+                        new GenreDbStorage(new JdbcTemplate()))
         );
     }
 

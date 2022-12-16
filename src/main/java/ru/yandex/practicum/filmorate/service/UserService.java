@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -13,11 +14,11 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 
-    private int nextId = 1;
+    private int nextId = 1; // TODO не знаю, насколько это уже нужно
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("usersDb") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -59,7 +60,7 @@ public class UserService {
         User friend = get(friendId);
 
         user.getFriends().add(friend.getId());
-        friend.getFriends().add(user.getId());
+        userStorage.addFriend(user.getId(), friend.getId());
 
         return user;
     }
@@ -74,31 +75,29 @@ public class UserService {
         User friend = get(friendId);
 
         user.getFriends().remove(friend.getId());
-        friend.getFriends().remove(user.getId());
+        userStorage.removeFriend(user.getId(), friend.getId());
 
         return user;
     }
 
-    // получить список друзей пользователя
+    // получить друзей пользователя
     public List<User> getFriends(int userId) {
         User user = get(userId);
-
-        return user.getFriends().stream()
-                .sorted()
-                .map(userStorage::get)
-                .collect(Collectors.toList());
+        return userStorage.getFriends(user.getId());
     }
 
+    // TODO переписать
     // получить список общих друзей
-    public List<User> getCommonFriends(int idUser1, int idUser2) {
-        User user1 = get(idUser1);
-        User user2 = get(idUser2);
+    public List<User> getCommonFriends(int idUser, int idOtherUser) {
+        User user = get(idUser);
+        User otherUser = get(idOtherUser);
+        return userStorage.getCommonFriends(user.getId(), otherUser.getId());
 
-        return user1.getFriends().stream()
-                .filter(user2.getFriends()::contains)
-                .sorted()
-                .map(userStorage::get)
-                .collect(Collectors.toList());
+//        return user.getFriends().stream()
+//                .filter(otherUser.getFriends()::contains)
+//                .sorted()
+//                .map(userStorage::get)
+//                .collect(Collectors.toList());
     }
 
     // ---------------------------------------------

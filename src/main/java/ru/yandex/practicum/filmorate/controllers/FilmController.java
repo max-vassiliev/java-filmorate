@@ -30,10 +30,9 @@ public class FilmController {
     private final FilmService filmService;
     private final ValidationService validationService;
 
-
     @GetMapping("/{id}")
     public Film get(@PathVariable int id) {
-        log.info("Get Film{}", id);
+        log.info("Get Film {}", id);
         return filmService.get(id);
     }
 
@@ -51,6 +50,11 @@ public class FilmController {
     }
 
     @PutMapping
+    public Film updateFilmWithoutId(@Valid @RequestBody Film film) {
+        return update(film);
+    }
+
+    @PutMapping("/{id}")
     public Film update(@Valid @RequestBody Film film) {
         log.info("Update film: {}", film);
         validationService.validate(film);
