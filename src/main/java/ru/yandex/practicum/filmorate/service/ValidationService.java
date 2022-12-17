@@ -17,7 +17,6 @@ import java.time.Month;
 public class ValidationService {
 
     private static final LocalDate CINEMA_CREATED = LocalDate.of(1895,  Month.DECEMBER, 28);
-
     private final MpaStorage mpaStorage;
     private final GenreStorage genreStorage;
 

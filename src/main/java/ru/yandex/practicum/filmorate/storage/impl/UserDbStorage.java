@@ -114,7 +114,6 @@ public class UserDbStorage implements UserStorage {
 
         friends.forEach(this::loadUserFriends);
         return friends;
-
     }
 
     // добавить дружбу в базу
@@ -138,12 +137,15 @@ public class UserDbStorage implements UserStorage {
 
     // создать объект пользователя (User)
     static User makeUser(ResultSet rs, int id) throws SQLException {
-        return new User(rs.getInt("USER_ID"),
+        User user = new User(rs.getInt("USER_ID"),
                 rs.getString("EMAIL"),
                 rs.getString("LOGIN"),
-                rs.getString("USER_NAME"),
-                rs.getDate("BIRTHDAY").toLocalDate()
+                rs.getString("USER_NAME")
         );
+        if (rs.getDate("BIRTHDAY") != null) {
+            user.setBirthday(rs.getDate("BIRTHDAY").toLocalDate());
+        }
+        return user;
     }
 
     // выгрузить из базы список ID друзей и добавить пользователю

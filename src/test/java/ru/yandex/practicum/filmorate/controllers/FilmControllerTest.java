@@ -1,10 +1,13 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.jdbc.core.JdbcTemplate;
-import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.ConstraintViolation;
@@ -15,41 +18,28 @@ import javax.validation.ValidationException;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.RandomStringUtils;
-import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.service.ValidationService;
-import ru.yandex.practicum.filmorate.storage.impl.GenreDbStorage;
-import ru.yandex.practicum.filmorate.storage.impl.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.impl.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.impl.MpaDbStorage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+@SpringBootTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class FilmControllerTest {
 
     private static Validator validator;
-    private FilmController filmController;
+    private final FilmController filmController;
 
     @BeforeAll
     public static void startValidator() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
-    }
-
-    @BeforeEach
-    void createFilmController() {
-        filmController = new FilmController(
-                new FilmService(new InMemoryFilmStorage(),
-                        new InMemoryUserStorage()),
-                new ValidationService(new MpaDbStorage(new JdbcTemplate()),
-                        new GenreDbStorage(new JdbcTemplate()))
-        );
     }
 
     // шаблон фильма со всеми полями
@@ -354,8 +344,8 @@ class FilmControllerTest {
         filmToUpdate.setReleaseDate(LocalDate.of(2010, Month.DECEMBER, 25));
         filmToUpdate.setDuration(120);
 
-        final FilmNotFoundException exception = assertThrows(
-                FilmNotFoundException.class,
+        final EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
                 () -> filmController.update(filmToUpdate)
         );
         assertEquals(expectedExceptionMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");

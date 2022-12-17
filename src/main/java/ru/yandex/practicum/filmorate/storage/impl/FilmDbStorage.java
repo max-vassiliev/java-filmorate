@@ -64,7 +64,11 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(sqlQuery, new String[]{"FILM_ID"});
             stmt.setString(1, film.getName());
-            stmt.setString(2, film.getDescription());
+            if (film.getDescription() == null) {
+                stmt.setNull(2, Types.NULL);
+            } else {
+                stmt.setString(2, film.getDescription());
+            }
             if (film.getReleaseDate() == null) {
                 stmt.setNull(3, Types.NULL);
             } else {
@@ -75,7 +79,11 @@ public class FilmDbStorage implements FilmStorage {
             } else {
                 stmt.setInt(4, film.getMpa().getId());
             }
-            stmt.setInt(5, film.getDuration());
+            if (film.getDuration() == null) {
+                stmt.setNull(5, Types.NULL);
+            } else {
+                stmt.setInt(5, film.getDuration());
+            }
             stmt.setInt(6, film.getTotalLikes());
             return stmt;
         }, keyHolder);
@@ -89,15 +97,35 @@ public class FilmDbStorage implements FilmStorage {
                 "set NAME = ?, DESCRIPTION = ?, RELEASE_DATE = ?, MPA = ?, DURATION = ?, LIKES = ? " +
                 "where FILM_ID = ?";
 
-        jdbcTemplate.update(sqlQuery,
-                film.getName(),
-                film.getDescription(),
-                Date.valueOf(film.getReleaseDate()),
-                film.getMpa().getId(),
-                film.getDuration(),
-                film.getLikes().size(),
-                film.getId()
-        );
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement stmt = connection.prepareStatement(sqlQuery, new String[]{"FILM_ID"});
+            stmt.setString(1, film.getName());
+            if (film.getDescription() == null) {
+                stmt.setNull(2, Types.NULL);
+            } else {
+                stmt.setString(2, film.getDescription());
+            }
+            if (film.getReleaseDate() == null) {
+                stmt.setNull(3, Types.NULL);
+            } else {
+                stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
+            }
+            if (film.getMpa() == null) {
+                stmt.setNull(4, Types.NULL);
+            } else {
+                stmt.setInt(4, film.getMpa().getId());
+            }
+            if (film.getDuration() == null) {
+                stmt.setNull(5, Types.NULL);
+            } else {
+                stmt.setInt(5, film.getDuration());
+            }
+            stmt.setInt(6, film.getTotalLikes());
+            stmt.setInt(7, film.getId());
+            return stmt;
+        }, keyHolder);
+
         setFilmGenres(film);
     }
 
@@ -135,11 +163,19 @@ public class FilmDbStorage implements FilmStorage {
     static Film makeFilm(ResultSet rs, int id) throws SQLException {
         Film film = new Film(rs.getInt("FILM_ID"),
                 rs.getString("NAME"),
-                rs.getString("DESCRIPTION"),
-                rs.getDate("RELEASE_DATE").toLocalDate(),
-                rs.getInt("DURATION"),
                 rs.getInt("LIKES")
         );
+        if (rs.getInt("DURATION") == 0) {
+            film.setDuration(null);
+        } else {
+            film.setDuration(rs.getInt("DURATION"));
+        }
+        if(rs.getString("DESCRIPTION") != null) {
+            film.setDescription(rs.getString("DESCRIPTION"));
+        }
+        if (rs.getDate("RELEASE_DATE") != null) {
+            film.setReleaseDate(rs.getDate("RELEASE_DATE").toLocalDate());
+        }
         if (rs.getInt("MPA") > 0) {
             film.setMpa(new Mpa(rs.getInt("MPA"), null));
         }
