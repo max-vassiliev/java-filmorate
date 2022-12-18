@@ -1,31 +1,27 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import javax.validation.ValidationException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private int nextId = 1;
     private final UserStorage userStorage;
 
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
 
     // получить пользователя
     public User get(int id) {
         User user = userStorage.get(id);
         if (user == null) {
-            throw new UserNotFoundException(String.format("Не найден пользователь с id %d", id));
+            throw new EntityNotFoundException(String.format("Не найден пользователь с id %d", id), User.class);
         }
         return user;
     }
@@ -59,7 +55,7 @@ public class UserService {
         User friend = get(friendId);
 
         user.getFriends().add(friend.getId());
-        friend.getFriends().add(user.getId());
+        userStorage.addFriend(user.getId(), friend.getId());
 
         return user;
     }
@@ -74,44 +70,37 @@ public class UserService {
         User friend = get(friendId);
 
         user.getFriends().remove(friend.getId());
-        friend.getFriends().remove(user.getId());
+        userStorage.removeFriend(user.getId(), friend.getId());
 
         return user;
     }
 
-    // получить список друзей пользователя
+    // получить друзей пользователя
     public List<User> getFriends(int userId) {
         User user = get(userId);
-
-        return user.getFriends().stream()
-                .sorted()
-                .map(userStorage::get)
-                .collect(Collectors.toList());
+        return userStorage.getFriends(user.getId());
     }
 
     // получить список общих друзей
-    public List<User> getCommonFriends(int idUser1, int idUser2) {
-        User user1 = get(idUser1);
-        User user2 = get(idUser2);
-
-        return user1.getFriends().stream()
-                .filter(user2.getFriends()::contains)
-                .sorted()
-                .map(userStorage::get)
-                .collect(Collectors.toList());
+    public List<User> getCommonFriends(int idUser, int idOtherUser) {
+        User user = get(idUser);
+        User otherUser = get(idOtherUser);
+        return userStorage.getCommonFriends(user.getId(), otherUser.getId());
     }
 
     // ---------------------------------------------
     // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
     // ---------------------------------------------
 
-    private void checkIdOnUpdate(User user) throws UserNotFoundException {
+    private void checkIdOnUpdate(User user) throws EntityNotFoundException {
         if (user.getId() == 0) {
-            user.setId(nextId++);
-            return;
+            add(user);
         }
         if (userStorage.get(user.getId()) == null) {
-            throw new UserNotFoundException(String.format("Не найден пользователь с id %d", user.getId()));
+            throw new EntityNotFoundException(
+                    String.format("Не найден пользователь с id %d", user.getId()),
+                    User.class
+            );
         }
     }
 }

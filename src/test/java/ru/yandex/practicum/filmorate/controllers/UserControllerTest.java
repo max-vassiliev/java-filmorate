@@ -1,13 +1,15 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.service.ValidationService;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -24,23 +26,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+@SpringBootTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class UserControllerTest {
 
     private static Validator validator;
-    private UserController userController;
+    private final UserController userController;
 
     @BeforeAll
     public static void startValidator() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
-    }
-
-    @BeforeEach
-    void createUserController() {
-        userController = new UserController(
-                new UserService(new InMemoryUserStorage()),
-                new ValidationService()
-        );
     }
 
     // шаблон: получить пользователя со всеми данными
@@ -327,8 +325,8 @@ class UserControllerTest {
         userToUpdate.setName("PiXl");
         userToUpdate.setBirthday(LocalDate.now());
 
-        final UserNotFoundException exception = assertThrows(
-                UserNotFoundException.class,
+        final EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
                 () -> userController.update(userToUpdate)
         );
         assertEquals(expectedExceptionMessage, exception.getMessage(), "Ожидалось другое сообщение об ошибке");

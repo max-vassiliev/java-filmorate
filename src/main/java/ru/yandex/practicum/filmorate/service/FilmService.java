@@ -1,35 +1,29 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class FilmService {
 
     private int nextId = 1;
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
 
-    @Autowired
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-    }
 
     // получить фильм
     public Film get(int filmId) {
         Film film = filmStorage.get(filmId);
         if (film == null) {
-            throw new FilmNotFoundException(String.format("Не найден фильм с id %d", filmId));
+            throw new EntityNotFoundException(String.format("Не найден фильм с id %d", filmId), Film.class);
         }
         return film;
     }
@@ -57,7 +51,11 @@ public class FilmService {
     public Film addLike(int filmId, int userId) {
         Film film = get(filmId);
         User user = getUser(userId);
+
         film.getLikes().add(user.getId());
+        film.setTotalLikes(film.getLikes().size());
+        filmStorage.update(film);
+        filmStorage.addLike(film.getId(), user.getId());
         return film;
     }
 
@@ -65,16 +63,17 @@ public class FilmService {
     public Film removeLike(int filmId, int userId) {
         Film film = get(filmId);
         User user = getUser(userId);
+
         film.getLikes().remove(user.getId());
+        film.setTotalLikes(film.getLikes().size());
+        filmStorage.update(film);
+        filmStorage.removeLike(film.getId(), user.getId());
         return film;
     }
 
     // получить список самых популярных фильмов
     public List<Film> getTopFilms(Integer size) {
-        return filmStorage.getAll().stream()
-                .sorted(this::compareLikes)
-                .limit(size)
-                .collect(Collectors.toList());
+        return filmStorage.getTopFilms(size);
     }
 
     // ---------------------------------------------
@@ -84,11 +83,10 @@ public class FilmService {
     // проверить ID при обновлении
     private void checkIdOnUpdate(Film film) {
         if (film.getId() == null) {
-            film.setId(nextId++);
-            return;
+            add(film);
         }
         if (filmStorage.get(film.getId()) == null) {
-            throw new FilmNotFoundException(String.format("Не найден фильм с id %d", film.getId()));
+            throw new EntityNotFoundException(String.format("Не найден фильм с id %d", film.getId()), Film.class);
         }
     }
 
@@ -96,13 +94,8 @@ public class FilmService {
     private User getUser(int id) {
         User user = userStorage.get(id);
         if (user == null) {
-            throw new UserNotFoundException(String.format("Не найден пользователь с id %d", id));
+            throw new EntityNotFoundException(String.format("Не найден пользователь с id %d", id), User.class);
         }
         return user;
-    }
-
-    // сравнить фильмы по количеству лайков
-    private int compareLikes(Film film, Film filmToCompare) {
-        return -1 * Integer.compare(film.getLikes().size(), filmToCompare.getLikes().size());
     }
 }
